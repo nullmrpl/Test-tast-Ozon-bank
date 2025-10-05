@@ -1,11 +1,14 @@
 import os
-import pytest
-from func_get_tallest_superhero import get_tallest_superhero
 import logging
+import pytest
 import json
 import requests
 
+from func_get_tallest_superhero import get_tallest_superhero
+
+
 logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(scope='module', autouse=True)
 def setup_teardown(file_path):
@@ -31,7 +34,7 @@ def setup_teardown(file_path):
         os.remove(file_path)
 
 
-
+@pytest.mark.positive
 @pytest.mark.parametrize("gender,is_working", [
     ("Male", True),
     ("Male", False),
@@ -69,6 +72,7 @@ def test_correct_params(file_path, gender, is_working):
     assert res_return_func == tallest_superhero_id_list, "Результат функции не верный"
 
 
+@pytest.mark.negative
 @pytest.mark.parametrize("gender,is_working", [
     (100, True)
 ])
@@ -79,6 +83,7 @@ def test_uncorrect_type_gender(file_path, gender, is_working):
         "Функция не обработала неверный параметр gender")
 
 
+@pytest.mark.negative
 @pytest.mark.parametrize("gender,is_working", [
     ("", True)
 ])
@@ -89,6 +94,7 @@ def test_empty_gender(file_path, gender, is_working):
         "Функция не обработала пустой параметр gender")
 
 
+@pytest.mark.negative
 @pytest.mark.parametrize("gender,is_working", [
     ("Female", "False")
 ])
@@ -99,6 +105,7 @@ def test_uncorrect_type_is_working(file_path, gender, is_working):
         "Функция не обработала неверный параметр gender")
 
 
+@pytest.mark.negative
 def test_uncorrect_token(monkeypatch):
     logger.info("Смена ACCESS_TOKEN на неверный")
     monkeypatch.setenv("ACCESS_TOKEN", "1t1t1t1t1t1tt1t1")
