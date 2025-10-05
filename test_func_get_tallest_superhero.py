@@ -8,7 +8,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope='module', autouse=True)
-def setip_teardown(file_path):
+def setup_teardown(file_path):
     logger.info("Setup")
     session = requests.Session()
     logger.info("Get all data for check")
@@ -27,6 +27,7 @@ def setip_teardown(file_path):
 
     logger.info("Teardown")
     if file_path.exists():
+        logger.info(f"Remove file with data for check")
         os.remove(file_path)
 
 
@@ -99,6 +100,7 @@ def test_uncorrect_type_is_working(file_path, gender, is_working):
 
 
 def test_uncorrect_token(monkeypatch):
+    logger.info("Смена ACCESS_TOKEN на неверный")
     monkeypatch.setenv("ACCESS_TOKEN", "1t1t1t1t1t1tt1t1")
     with pytest.raises(Exception) as e:
         res_return_func = get_tallest_superhero("Male", True)
