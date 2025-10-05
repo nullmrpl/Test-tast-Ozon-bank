@@ -49,6 +49,8 @@ def get_tallest_superhero(gender: str, is_working: bool) -> list:
         if current_work == is_working:
             res = request_wrapper(session, f"{id}/appearance")
             if res["gender"].lower() == gender.lower():
+                if len(res["height"]) != 2:
+                    continue
                 if "cm" in res["height"][1]:
                     cur_height = float(res["height"][1].removesuffix(" cm"))
                 elif "meters" in res["height"][1]:

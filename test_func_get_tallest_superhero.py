@@ -56,6 +56,8 @@ def test_correct_params(file_path, gender, is_working):
             if item["appearance"]["gender"].lower() != gender.lower():
                 continue
             if item["work"]["occupation"] and item["work"]["occupation"] != "-":
+                if len(item["appearance"]["height"]) != 2:
+                    continue
                 if "cm" in item["appearance"]["height"][1]:
                     cur_height = float(item["appearance"]["height"][1].removesuffix(" cm"))
                 elif "meters" in item["appearance"]["height"][1]:
