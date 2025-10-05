@@ -28,6 +28,13 @@ def get_tallest_superhero(gender: str, is_working: bool) -> list:
     Функцию принимает на вход пол и наличие работы (булево значение)
     и возвращает по этим критериям самого высокого героя (если несколько супергероев с одним ростом, то всех)
     """
+    if not isinstance(gender, str):
+        raise TypeError("Ошибка: переменная gender должна быть типа str")
+    if not gender:
+        raise ValueError("Ошибка: переменная gender пустая")
+    if not isinstance(is_working, bool):
+        raise TypeError("Ошибка: переменная is_working должна быть типа bool")
+    
     tallest_superhero_id_list = []
     max_height = None
     id = 1
@@ -42,11 +49,17 @@ def get_tallest_superhero(gender: str, is_working: bool) -> list:
         if current_work == is_working:
             res = request_wrapper(session, f"{id}/appearance")
             if res["gender"].lower() == gender.lower():
-                if not max_height or res["height"][1] > max_height:
+                if "cm" in res["height"][1]:
+                    cur_height = float(res["height"][1].removesuffix(" cm"))
+                elif "meters" in res["height"][1]:
+                    cur_height = float(res["height"][1].removesuffix(" meters")) * 100
+                else:
+                    continue
+                if not max_height or cur_height > max_height:
                     tallest_superhero_id_list.clear()
                     tallest_superhero_id_list.append(id)
-                    max_height = res["height"][1]
-                elif max_height and res["height"][1] == max_height:
+                    max_height = cur_height
+                elif max_height and cur_height == max_height:
                     tallest_superhero_id_list.append(id)
         id += 1
         logger.debug(f"{id}")
