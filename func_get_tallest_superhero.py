@@ -1,41 +1,59 @@
 import os
 import requests
-import json
 import logging
 
 logger = logging.getLogger("func_get_tallest_superhero")
 
+
+def request_wrapper(session: requests.Session, endpoint, white_list = None):
+    if not white_list:
+        white_list = []
+    base_url = f"https://www.superheroapi.com/api/{os.getenv('ACCESS_TOKEN', None)}"
+    res = session.get(f"{base_url}/{endpoint}")
+    if not res:
+        logger.debug(f"Ошибка обращения по url {base_url}/{endpoint}: {res.text}")
+        raise Exception(f"{res.text}")
+    
+    res = res.json()
+    if res["response"] == "error":
+        error = res["error"]
+        if error in white_list:
+            return None
+        else:
+            raise Exception(f"Ошибка: {error}")
+    return res
 
 def get_tallest_superhero(gender: str, is_working: bool) -> list:
     """
     Функцию принимает на вход пол и наличие работы (булево значение)
     и возвращает по этим критериям самого высокого героя (если несколько супергероев с одним ростом, то всех)
     """
-    base_url = f"https://www.superheroapi.com/api/{os.getenv('ACCESS_TOKEN', None)}"
-    tallest_superhero_list = []
+    tallest_superhero_id_list = []
+    max_height = None
     id = 1
+
+    session = requests.Session()
+
     while id:
-        res = requests.get(f"{base_url}/{id}/work")
+        res = request_wrapper(session, f"{id}/work", ["invalid id"])
         if not res:
-            logger.debug(f"Ошибка обращения по url {base_url}/{id}/work: {res.text}")
-            break
-        res = res.json()
-        if res["response"] == "error":
-            logger.debug(f"{res['error']}: id={id}")
             break
         current_work = res["occupation"] != "-" 
         if current_work == is_working:
-            res = requests.get(f"{base_url}/{id}/appearance")
-            res = res.json()
+            res = request_wrapper(session, f"{id}/appearance")
             if res["gender"].lower() == gender.lower():
-                if not tallest_superhero_list or res["height"][1] > tallest_superhero_list[0]["appearance"]["height"][1]:
-                    res = requests.get(f"{base_url}/{id}")
-                    res = res.json()
-                    tallest_superhero_list.clear()
-                    tallest_superhero_list.append(res)
-                elif tallest_superhero_list and res["height"][1] == tallest_superhero_list[0]["appearance"]["height"][1]:
-                    tallest_superhero_list.append(res)
+                if not max_height or res["height"][1] > max_height:
+                    tallest_superhero_id_list.clear()
+                    tallest_superhero_id_list.append(id)
+                    max_height = res["height"][1]
+                elif max_height and res["height"][1] == max_height:
+                    tallest_superhero_id_list.append(id)
         id += 1
         logger.debug(f"{id}")
-    logger.debug(f"Cамый высокий супергерой с заданными критериями: {tallest_superhero_list}")
+    logger.debug(f"id Cамого высокого супергероя с заданными критериями: {tallest_superhero_id_list}")
+    
+    tallest_superhero_list = []
+    for id in tallest_superhero_id_list:
+        res = request_wrapper(session, id)
+        tallest_superhero_list.append(res)
     return tallest_superhero_list
