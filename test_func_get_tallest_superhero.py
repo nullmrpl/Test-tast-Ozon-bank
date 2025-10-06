@@ -82,7 +82,7 @@ def test_correct_params(file_path, gender, is_working):
 @pytest.mark.negative
 def test_very_long_gender():
     with pytest.raises(Exception) as e:
-        res_return_func = get_tallest_superhero("FemaleMale" * 10000000, True)
+        res_return_func = get_tallest_superhero("FemaleMale" * 10000000000, True)
     assert "Ошибка: переменная gender имеет слишком большое значение" in str(e.value), (
         f"{e}")
 
