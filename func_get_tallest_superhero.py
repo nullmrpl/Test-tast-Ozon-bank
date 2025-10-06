@@ -37,11 +37,12 @@ def get_tallest_superhero(gender: str, is_working: bool) -> list:
     
     tallest_superhero_id_list = []
     max_height = None
-    id = 1
+    id = 0
 
     session = requests.Session()
 
-    while id:
+    while True:
+        id += 1
         res = request_wrapper(session, f"{id}/work", ["invalid id"])
         if not res:
             break
@@ -63,7 +64,6 @@ def get_tallest_superhero(gender: str, is_working: bool) -> list:
                     max_height = cur_height
                 elif max_height and cur_height == max_height:
                     tallest_superhero_id_list.append(id)
-        id += 1
         logger.debug(f"{id}")
     logger.debug(f"id Cамого высокого супергероя с заданными критериями: {tallest_superhero_id_list}")
     
