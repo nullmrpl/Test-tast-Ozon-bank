@@ -44,6 +44,8 @@ def setup_teardown(file_path):
     ("-", True),
     ("-", False),
     ("Fimale", True),
+    ("F(i&@male", True),
+    ("Мужчина", True),
 ])
 def test_correct_params(file_path, gender, is_working):
     res_return_func = get_tallest_superhero(gender, is_working)
@@ -55,7 +57,7 @@ def test_correct_params(file_path, gender, is_working):
             item = json.loads(line)
             if item["appearance"]["gender"].lower() != gender.lower():
                 continue
-            if item["work"]["occupation"] and item["work"]["occupation"] != "-":
+            if item["work"]["occupation"] and (item["work"]["occupation"] != "-") == is_working:
                 if len(item["appearance"]["height"]) != 2:
                     continue
                 if "cm" in item["appearance"]["height"][1]:
@@ -71,40 +73,18 @@ def test_correct_params(file_path, gender, is_working):
                 elif max_height and cur_height == max_height:
                     tallest_superhero_id_list.append(item)
 
-    assert res_return_func == tallest_superhero_id_list, "Результат функции не верный"
+    assert res_return_func == tallest_superhero_id_list, (
+        "Результат функции не верный: "
+        f"Получено: {[i['id'] for i in res_return_func]}, "
+        f"ожидалось: {[i['id'] for i in tallest_superhero_id_list]}")
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("gender,is_working", [
-    (100, True)
-])
-def test_uncorrect_type_gender(file_path, gender, is_working):
-    with pytest.raises(TypeError) as e:
-        res_return_func = get_tallest_superhero(gender, is_working)
-    assert "Ошибка: переменная gender должна быть типа str" in str(e.value), (
-        "Функция не обработала неверный параметр gender")
-
-
-@pytest.mark.negative
-@pytest.mark.parametrize("gender,is_working", [
-    ("", True)
-])
-def test_empty_gender(file_path, gender, is_working):
-    with pytest.raises(ValueError) as e:
-        res_return_func = get_tallest_superhero(gender, is_working)
-    assert "Ошибка: переменная gender пустая" in str(e.value), (
-        "Функция не обработала пустой параметр gender")
-
-
-@pytest.mark.negative
-@pytest.mark.parametrize("gender,is_working", [
-    ("Female", "False")
-])
-def test_uncorrect_type_is_working(file_path, gender, is_working):
-    with pytest.raises(TypeError) as e:
-        res_return_func = get_tallest_superhero(gender, is_working)
-    assert "Ошибка: переменная is_working должна быть типа bool" in str(e.value), (
-        "Функция не обработала неверный параметр gender")
+def test_very_long_gender():
+    with pytest.raises(Exception) as e:
+        res_return_func = get_tallest_superhero("FemaleMale" * 10000000, True)
+    assert "Ошибка: переменная gender имеет слишком большое значение" in str(e.value), (
+        f"{e}")
 
 
 @pytest.mark.negative
@@ -113,4 +93,50 @@ def test_uncorrect_token(monkeypatch):
     monkeypatch.setenv("ACCESS_TOKEN", "1t1t1t1t1t1tt1t1")
     with pytest.raises(Exception) as e:
         res_return_func = get_tallest_superhero("Male", True)
-    assert "Ошибка: access denied" in str(e.value), "Функция не обработала неверный токен"
+    assert "Ошибка: access denied" in str(e.value), "Функция не провалидировала неверный токен"
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("gender,is_working", [
+    (100, True),
+    (None, True)
+])
+def test_uncorrect_type_gender(file_path, gender, is_working):
+    with pytest.raises(TypeError) as e:
+        res_return_func = get_tallest_superhero(gender, is_working)
+    assert "Ошибка: переменная gender должна быть типа str" in str(e.value), (
+        "Функция не провалидировала неверный параметр gender")
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("gender,is_working", [
+    ("", True)
+])
+def test_empty_gender(gender, is_working):
+    with pytest.raises(ValueError) as e:
+        res_return_func = get_tallest_superhero(gender, is_working)
+    assert "Ошибка: переменная gender пустая" in str(e.value), (
+        "Функция не провалидировала пустой параметр gender")
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("gender,is_working", [
+    ("   ", True)
+])
+def test_gender_with_space(gender, is_working):
+    with pytest.raises(ValueError) as e:
+        res_return_func = get_tallest_superhero(gender, is_working)
+    assert "Ошибка: передано некорректное значение переменной gender" in str(e.value), (
+        "Функция не провалидировала параметр gender")
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("gender,is_working", [
+    ("Female", "False"),
+    ("Female", None)
+])
+def test_uncorrect_type_is_working(gender, is_working):
+    with pytest.raises(TypeError) as e:
+        res_return_func = get_tallest_superhero(gender, is_working)
+    assert "Ошибка: переменная is_working должна быть типа bool" in str(e.value), (
+        "Функция не провалидировала неверный параметр is_working")
