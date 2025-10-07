@@ -88,3 +88,8 @@ pytest test_func_get_tallest_superhero.py::test_uncorrect_token
 Можно запустить тесты с генерацией allure-отчета (предварительно установив allure и библиотеку allure-pytest):
 
 Пример отчета:
+![alt text](allure-report/image.png)
+
+В результате два теста не пройдено:
+- test_very_long_gender - нет обработки больших значений
+- test_gender_with_space - нет обработки пробелов
